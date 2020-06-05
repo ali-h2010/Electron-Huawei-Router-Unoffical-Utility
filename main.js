@@ -189,8 +189,28 @@ function createWindow() {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(createWindow);
 
+var opsys = process.platform;
+if (opsys == "darwin") 
+{
+    opsys = "MacOS";
+} 
+else if (opsys == "win32" || opsys == "win64") 
+{
+    opsys = "Windows";
+} else if (opsys == "linux") 
+{
+    opsys = "Linux";
+}
+console.log(opsys)
+
+
 //Hide app from the dock
-app.dock.hide();
+if(opsys == "MacOS" )
+{
+	app.dock.hide();
+}
+
+
 
 
 
