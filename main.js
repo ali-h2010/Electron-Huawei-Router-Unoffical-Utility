@@ -69,7 +69,14 @@ function createWindow() {
 
   win.setSkipTaskbar(true);
   // load the index.html of the app.
-  win.loadFile('Views/index.html')
+
+  // This is wrong
+  // win.loadFile('Views/index.html'))
+  // After Packing the app the app will look at rootDirector/Views
+  // Not inside the app
+  // You need to use relative path
+
+  win.loadFile(path.join(__dirname, 'Views/index.html'))
 
   win.on('close', function (event) {
     // event.preventDefault();
@@ -83,8 +90,15 @@ function createWindow() {
 
 
   let AppTray = null;
-  const iconPath = 'Assets/Images/BatteryIcons/UnknownBattery.png';
-  AppTray = new Tray(iconPath);
+
+  // Same error
+  // const iconPath = 'Assets/Images/BatteryIcons/UnknownBattery.png')
+  // AppTray = new Tray(iconPath);
+  // After packaging the app there won't be assets on rootdirectory
+  // Just inside your app packages
+  // Needs to use like this
+  const iconPath = path.join(__dirname, 'Assets/Images/BatteryIcons')
+  AppTray = new Tray(path.join(iconPath, 'UnknownBattery.png'));
 
   var contextMenu = Menu.buildFromTemplate([
     { label: 'Quit',
@@ -108,7 +122,7 @@ function createWindow() {
   var LowBatteryNotificationShowed = false;
 
 
-  const intervalObj = setInterval(() => {
+  const intervalObj = setInterval((iconPath) => {
 
     if(IsConnectedToInternet)
     {
@@ -119,16 +133,14 @@ function createWindow() {
           //if charging
           if (response.BatteryStatus[0] == '1') {
             console.log('Battery is charging');
-            let iconPath = 'Assets/Images/BatteryIcons/ChargingBattery.png';
-            AppTray.setImage(iconPath);
+            AppTray.setImage(path.join(iconPath, 'ChargingBattery.png'));
             if (response.BatteryPercent[0]) {
               AppTray.setToolTip('Router is charging (' + response.BatteryPercent[0] + '%)\n' + SgianlStrengthString);
               AppTray.setTitle(response.BatteryPercent[0] + '%');
             }
             else {
               AppTray.setToolTip('Unknown battery level or device has no battery\n' + SgianlStrengthString);
-              let iconPath = 'Assets/Images/BatteryIcons/UnknownBattery.png';
-              AppTray.setImage(iconPath);
+              AppTray.setImage(path.join(iconPath, 'UnknownBattery.png'));
             }
           }
           //not charging
@@ -136,19 +148,19 @@ function createWindow() {
             //known battery level
             if (response.BatteryPercent[0]) {
               var BatteryLevelNumber = parseInt(response.BatteryPercent[0]);
-              let iconPath = 'Assets/Images/BatteryIcons/UnknownBattery.png';
+              let batteryIcon = 'UnknownBattery.png';
   
               if (BatteryLevelNumber >= 75) {
-                iconPath = 'Assets/Images/BatteryIcons/FullBattery.png';
+                batteryIcon = 'FullBattery.png';
               }
               else if (BatteryLevelNumber >= 50) {
-                iconPath = 'Assets/Images/BatteryIcons/AboveMediumBattery.png';
+                batteryIcon = 'AboveMediumBattery.png';
               }
               else if (BatteryLevelNumber >= 25) {
-                iconPath = 'Assets/Images/BatteryIcons/MediumBattery.png';
+                batteryIcon = 'MediumBattery.png';
               }
               else {
-                iconPath = 'Assets/Images/BatteryIcons/LowBattery.png';
+                batteryIcon = 'LowBattery.png';
   
                 LowBatteryNotificationShowed = true;
               }
@@ -156,15 +168,15 @@ function createWindow() {
               if (BatteryLevelNumber > 25) {
                 LowBatteryNotificationShowed = false;
               }
-              AppTray.setImage(iconPath);
+              AppTray.setImage(path.join(iconPath, batteryIcon));
               AppTray.setToolTip('Battery level: (' + response.BatteryPercent[0] + '%)\n' + SgianlStrengthString);
               AppTray.setTitle(response.BatteryPercent[0] + '%');
             }
             //Unknown battery level
             else {
               AppTray.setToolTip('Router is with unknown battery level or device has no battery');
-              let iconPath = 'Assets/Images/BatteryIcons/UnknownBattery.png';
-              AppTray.setImage(iconPath);
+              let batteryIcon = 'UnknownBattery.png';
+              AppTray.setImage(path.join(iconPath, batteryIcon));
             }
           }
   
@@ -175,11 +187,11 @@ function createWindow() {
     {
       AppTray.setToolTip('please check your internet connection');
       AppTray.setTitle('Not Connected');
-      let iconPath = 'Assets/Images/BatteryIcons/UnknownBattery.png';
-      AppTray.setImage(iconPath);
+      let batteryIcon = 'UnknownBattery.png';
+      AppTray.setImage(path.join(iconPath, batteryIcon));
     }
   
-  }, RefreshRouterStatusEveryMiliseconds)
+  }, RefreshRouterStatusEveryMiliseconds, iconPath)
 
 
 }
