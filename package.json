@@ -1,21 +1,29 @@
 {
   "name": "electronjstutorial",
   "version": "1.0.0",
-  "description": "",
+  "description": "a simple utility for managing huawei router. it will monitor the battery and signal",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron ."
+    "start": "electron .",
+    "dist": "electron-builder"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Ali AlKhamis",
+  "license": "MIT",
   "devDependencies": {
-    "electron": "^9.0.0"
+    "electron": "^9.0.2",
+    "electron-builder": "^22.7.0"
   },
   "dependencies": {
     "dialog-router-api": "0.0.3",
     "electron-reload": "^1.5.0",
     "jquery": "^3.5.1",
     "node-notifier": "^7.0.0"
+  },
+  "build": {
+    "appId": "HuaweiRouterUtility",
+    "mac": {
+      "category": "tech.developers.net.HwaweiRouter"
+    }
   }
 }
