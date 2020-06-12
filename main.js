@@ -122,70 +122,79 @@ function createWindow() {
 
   function UpdateRouterStatus() {
     if (IsConnectedToInternet) {
-      var tokenResult = router.getToken(function (error, token) {
+      try {
+        router.getToken(function (error, token) {         
+          if (!error) {
+             router.getStatus(token, function (error, response) {            
+              var SgianlStrengthString = GetSignalStrength(response);
 
-        router.getStatus(token, function (error, response) {
-          var SgianlStrengthString = GetSignalStrength(response);
-
-          //if charging
-          if (response.BatteryStatus[0] == '1') {
-            console.log('Battery is charging');
-            AppTray.setImage(path.join(iconPath, 'ChargingBattery.png'));
-            if (response.BatteryPercent[0]) {
-              AppTray.setToolTip('Router is charging (' + response.BatteryPercent[0] + '%)\n' + SgianlStrengthString);
-              AppTray.setTitle(response.BatteryPercent[0] + '%');
-            }
-            else {
-              AppTray.setToolTip('Unknown battery level or device has no battery\n' + SgianlStrengthString);
-              AppTray.setImage(path.join(iconPath, 'UnknownBattery.png'));
-            }
-          }
-          //not charging
-          else {
-            //known battery level
-            if (response.BatteryPercent[0]) {
-              var BatteryLevelNumber = parseInt(response.BatteryPercent[0]);
-              let batteryIcon = 'UnknownBattery.png';
-
-              if (BatteryLevelNumber >= 75) {
-                batteryIcon = 'FullBattery.png';
+              //if charging
+              if (response.BatteryStatus[0] == '1') {
+                console.log('Battery is charging');
+                AppTray.setImage(path.join(iconPath, 'ChargingBattery.png'));
+                if (response.BatteryPercent[0]) {
+                  AppTray.setToolTip('Router is charging (' + response.BatteryPercent[0] + '%)\n' + SgianlStrengthString);
+                  AppTray.setTitle(response.BatteryPercent[0] + '%');
+                }
+                else {
+                  AppTray.setToolTip('Unknown battery level or device has no battery\n' + SgianlStrengthString);
+                  AppTray.setImage(path.join(iconPath, 'UnknownBattery.png'));
+                }
               }
-              else if (BatteryLevelNumber >= 50) {
-                batteryIcon = 'AboveMediumBattery.png';
-              }
-              else if (BatteryLevelNumber >= 25) {
-                batteryIcon = 'MediumBattery.png';
-              }
+              //not charging
               else {
-                batteryIcon = 'LowBattery.png';
+                //known battery level
+                if (response.BatteryPercent[0]) {
+                  var BatteryLevelNumber = parseInt(response.BatteryPercent[0]);
+                  let batteryIcon = 'UnknownBattery.png';
 
-                LowBatteryNotificationShowed = true;
+                  if (BatteryLevelNumber >= 75) {
+                    batteryIcon = 'FullBattery.png';
+                  }
+                  else if (BatteryLevelNumber >= 50) {
+                    batteryIcon = 'AboveMediumBattery.png';
+                  }
+                  else if (BatteryLevelNumber >= 25) {
+                    batteryIcon = 'MediumBattery.png';
+                  }
+                  else {
+                    batteryIcon = 'LowBattery.png';
+
+                    LowBatteryNotificationShowed = true;
+                  }
+
+                  if (BatteryLevelNumber > 25) {
+                    LowBatteryNotificationShowed = false;
+                  }
+                  AppTray.setImage(path.join(iconPath, batteryIcon));
+                  AppTray.setToolTip('Battery level: (' + response.BatteryPercent[0] + '%)\n' + SgianlStrengthString);
+                  AppTray.setTitle(response.BatteryPercent[0] + '%');
+                }
+                //Unknown battery level
+                else {
+                  AppTray.setToolTip('Router is with unknown battery level or device has no battery');
+                  let batteryIcon = 'UnknownBattery.png';
+                  AppTray.setImage(path.join(iconPath, batteryIcon));
+                }
               }
 
-              if (BatteryLevelNumber > 25) {
-                LowBatteryNotificationShowed = false;
-              }
-              AppTray.setImage(path.join(iconPath, batteryIcon));
-              AppTray.setToolTip('Battery level: (' + response.BatteryPercent[0] + '%)\n' + SgianlStrengthString);
-              AppTray.setTitle(response.BatteryPercent[0] + '%');
-            }
-            //Unknown battery level
-            else {
-              AppTray.setToolTip('Router is with unknown battery level or device has no battery');
-              let batteryIcon = 'UnknownBattery.png';
-              AppTray.setImage(path.join(iconPath, batteryIcon));
-            }
+            });
+          }
+          else {
+            AppTray.setToolTip('Error in connecting to Huawei router.');
+            let batteryIcon = 'UnknownBattery.png';
+            AppTray.setImage(path.join(iconPath, batteryIcon));
           }
 
         });
+      }
+      catch (error) {
+        console.error(error);
+        AppTray.setToolTip('Error in connecting to Huawei router.');
+        let batteryIcon = 'UnknownBattery.png';
+        AppTray.setImage(path.join(iconPath, batteryIcon));
+      }
 
-      });
-     if(!tokenResult)
-     {
-      AppTray.setToolTip('Error in connecting to Huawei router.');
-      let batteryIcon = 'UnknownBattery.png';
-      AppTray.setImage(path.join(iconPath, batteryIcon));
-     }
     }
     else {
       AppTray.setToolTip('please check your internet connection');
@@ -198,12 +207,24 @@ function createWindow() {
 }
 
 
+process.on('uncaughtException', function (err) {
+  console.error((new Date).toUTCString() + ' uncaughtException:', err.message)
+  console.error(err.stack)
+  ShowNotification("An error has occured", "Please check your connection and make sure that you have a supported router.", "");
+  process.exit(1)
+});
 
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(createWindow);
+
+//add to startup
+app.setLoginItemSettings({
+  openAtLogin: true,
+});
+
 
 var opsys = process.platform;
 if (opsys == "darwin") {
