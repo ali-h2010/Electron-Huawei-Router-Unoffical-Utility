@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, Tray ,ipcMain} = require('electron')
+const { app, BrowserWindow, Menu, Tray, ipcMain } = require('electron')
 const url = require('url')
 const path = require('path')
 var win = null;
@@ -6,18 +6,16 @@ const RefreshRouterStatusEveryMiliseconds = 10000;
 const RouterGateway = '192.168.8.1';
 const ShowAppWindow = false;
 
-var IsConnectedToInternet =  false;
+var IsConnectedToInternet = false;
 
 //event from index.html script for checking network
 ipcMain.on('online-status-changed', (event, status) => {
-  if(status =="online")
-  {
+  if (status == "online") {
     IsConnectedToInternet = true;
   }
-  else
-  {
+  else {
     IsConnectedToInternet = false;
-  } 
+  }
   console.log("IsConnected: " + IsConnectedToInternet);
 
 })
@@ -64,17 +62,11 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true
     }
-    ,show: ShowAppWindow // start minimized (in tray) if false
+    , show: ShowAppWindow // start minimized (in tray) if false
   })
 
   win.setSkipTaskbar(true);
-  // load the index.html of the app.
-
-  // This is wrong
-  // win.loadFile('Views/index.html'))
-  // After Packing the app the app will look at rootDirector/Views
-  // Not inside the app
-  // You need to use relative path
+  // load the index.html of the app. 
 
   win.loadFile(path.join(__dirname, 'Views/index.html'))
 
@@ -82,7 +74,7 @@ function createWindow() {
     // event.preventDefault();
     // win.hide();
   })
-  
+
   win.on('minimize', function (event) {
     event.preventDefault()
     win.hide()
@@ -90,18 +82,12 @@ function createWindow() {
 
 
   let AppTray = null;
-
-  // Same error
-  // const iconPath = 'Assets/Images/BatteryIcons/UnknownBattery.png')
-  // AppTray = new Tray(iconPath);
-  // After packaging the app there won't be assets on rootdirectory
-  // Just inside your app packages
-  // Needs to use like this
   const iconPath = path.join(__dirname, 'Assets/Images/BatteryIcons')
   AppTray = new Tray(path.join(iconPath, 'UnknownBattery.png'));
 
   var contextMenu = Menu.buildFromTemplate([
-    { label: 'Quit',
+    {
+      label: 'Quit',
       accelerator: 'Command+Q',
       selector: 'terminate:',
     }
@@ -113,7 +99,7 @@ function createWindow() {
 
   ShowNotification("Unofficial Huawei Router Utility started", "Utility started and will be on system tray/top menu", "");
 
-  var router = require('dialog-router-api').create({
+  let router = require('dialog-router-api').create({
     gateway: RouterGateway
     // The IP address of your router, can be found by doing
     // ipconfig on windows or netstat -r on linux (right under 'Gateway')
@@ -124,12 +110,23 @@ function createWindow() {
 
   const intervalObj = setInterval((iconPath) => {
 
-    if(IsConnectedToInternet)
-    {
-      router.getToken(function (error, token) {
+    try {
+      UpdateRouterStatus();
+    } catch (error) {
+      console.error(error);
+    }
+
+
+
+  }, RefreshRouterStatusEveryMiliseconds, iconPath)
+
+  function UpdateRouterStatus() {
+    if (IsConnectedToInternet) {
+      var tokenResult = router.getToken(function (error, token) {
+
         router.getStatus(token, function (error, response) {
           var SgianlStrengthString = GetSignalStrength(response);
-  
+
           //if charging
           if (response.BatteryStatus[0] == '1') {
             console.log('Battery is charging');
@@ -149,7 +146,7 @@ function createWindow() {
             if (response.BatteryPercent[0]) {
               var BatteryLevelNumber = parseInt(response.BatteryPercent[0]);
               let batteryIcon = 'UnknownBattery.png';
-  
+
               if (BatteryLevelNumber >= 75) {
                 batteryIcon = 'FullBattery.png';
               }
@@ -161,10 +158,10 @@ function createWindow() {
               }
               else {
                 batteryIcon = 'LowBattery.png';
-  
+
                 LowBatteryNotificationShowed = true;
               }
-  
+
               if (BatteryLevelNumber > 25) {
                 LowBatteryNotificationShowed = false;
               }
@@ -179,22 +176,29 @@ function createWindow() {
               AppTray.setImage(path.join(iconPath, batteryIcon));
             }
           }
-  
+
         });
+
       });
+     if(!tokenResult)
+     {
+      AppTray.setToolTip('Error in connecting to Huawei router.');
+      let batteryIcon = 'UnknownBattery.png';
+      AppTray.setImage(path.join(iconPath, batteryIcon));
+     }
     }
-    else
-    {
+    else {
       AppTray.setToolTip('please check your internet connection');
       AppTray.setTitle('Not Connected');
       let batteryIcon = 'UnknownBattery.png';
       AppTray.setImage(path.join(iconPath, batteryIcon));
     }
-  
-  }, RefreshRouterStatusEveryMiliseconds, iconPath)
-
+  }
 
 }
+
+
+
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -202,24 +206,20 @@ function createWindow() {
 app.whenReady().then(createWindow);
 
 var opsys = process.platform;
-if (opsys == "darwin") 
-{
-    opsys = "MacOS";
-} 
-else if (opsys == "win32" || opsys == "win64") 
-{
-    opsys = "Windows";
-} else if (opsys == "linux") 
-{
-    opsys = "Linux";
+if (opsys == "darwin") {
+  opsys = "MacOS";
+}
+else if (opsys == "win32" || opsys == "win64") {
+  opsys = "Windows";
+} else if (opsys == "linux") {
+  opsys = "Linux";
 }
 console.log(opsys)
 
 
 //Hide app from the dock
-if(opsys == "MacOS" )
-{
-	app.dock.hide();
+if (opsys == "MacOS") {
+  app.dock.hide();
 }
 
 
