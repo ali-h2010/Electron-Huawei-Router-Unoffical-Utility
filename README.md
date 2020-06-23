@@ -32,6 +32,18 @@ Tested on Mac:
 ### Battery charge is unknown or device is not using battery:
 ![screenshot of the project](Assets/Images/BatteryIcons/UnknownBattery.png)
 
+### Tested on Windows 10 showing power and siganl stregth:
+![screenshot of the project](README_Extra/HuaweiUtilityShowcaseWindows.PNG)
+
+### It will show a notificaiton once app start:
+![screenshot of the project](README_Extra/HuaweiUtilityShowcaseWindowsNotification.PNG)
+
+## How to use:
+- clone or downlaod the solution.
+- Go to directory and type  **"npm install"** in terminal or command prompt window.
+- Type  **"npm start"** to run the app.
+
+
 ## Technologies used and credits:
 
 | Technology              | Description                                                                                            | 
