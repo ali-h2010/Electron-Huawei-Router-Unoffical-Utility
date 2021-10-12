@@ -11,7 +11,7 @@
   "author": "Ali AlKhamis",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^9.0.2",
+    "electron": "^11.5.0",
     "electron-builder": "^22.7.0"
   },
   "dependencies": {
